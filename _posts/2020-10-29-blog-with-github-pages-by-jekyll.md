@@ -4,7 +4,7 @@ layout: post
 author: "jlshix"
 header-style: text
 tags:
-  - Jekyll
+  - jekyll
 ---
 
 之前的个人博客是使用 `Hexo` 搭建的, 使用 `NexT` 主题.
