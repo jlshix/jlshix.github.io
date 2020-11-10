@@ -6,12 +6,12 @@ author: "jlshix"
 header-style: text
 tags:
   - python
-  - oracle
+  - Oracle
   - 数据库
   - docker
 ---
 
-docker 作为最成熟的商业数据库, 常年在 [DB Engines Ranking](https://db-engines.com/en/ranking)
+`Oracle` 作为最成熟的商业数据库, 常年在 [DB Engines Ranking](https://db-engines.com/en/ranking)
 榜上有名, 但是对新手来讲真的不够友好, 官方提供的 python 驱动 `cx_Oracle` 是需要额外依赖
 Oracle 客户端的. 因此在使用的时候需要手动制作镜像.
 
@@ -22,7 +22,6 @@ Traceback (most recent call last):
   File "oracle_db.py", line 11, in <module>
     db = cx_Oracle.connect(ORACLE_USER, ORACLE_PASSWORD, ORACLE_URI)
 cx_Oracle.DatabaseError: DPI-1047: Cannot locate a 64-bit Oracle Client library: "libclntsh.so: cannot open shared object file: No such file or directory". See https://cx-oracle.readthedocs.io/en/latest/user_guide/installation.html for help
-
 ```
 
 根据安装指南, 必须安装 [Oracle Instant Client](https://www.oracle.com/database/technologies/instant-client.html),
@@ -31,7 +30,7 @@ cx_Oracle.DatabaseError: DPI-1047: Cannot locate a 64-bit Oracle Client library:
 根据[安装指南](https://docs.oracle.com/en/database/oracle/oracle-database/19/lnoci/instant-client.html#GUID-D0042396-7C99-4450-962C-6E3DBF6EFD41) 的说明, 
 需要以下几步:
 
-- 安装 `libaio1`, 如 `apt install libaio1`, `yum install libaio`
+- 安装 `libaio`, 如 `apt install libaio1` 或 `yum install libaio`
 
 - 在 [下载列表](https://www.oracle.com/database/technologies/instant-client/downloads.html) 选择需要下载的版本进行下载
 
@@ -66,6 +65,4 @@ RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list \
     && echo /deploy/instantclient_19_9 > /etc/ld.so.conf.d/oracle-instantclient.conf \
     && ldconfig \
     && pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple -r requirements.txt
-
 ```
-
