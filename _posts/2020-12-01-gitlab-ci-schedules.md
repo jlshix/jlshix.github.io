@@ -1,68 +1,44 @@
 ---
-title: "pymongo 不存在则插入的实现"
+title: "gitlab ci schedules 功能初探"
 subtitle: ""
 layout: post
 author: "jlshix"
 header-style: text
 tags:
-  - pymongo
-  - mongodb
+  - gitlab
+  - ci
 ---
 
-在执行插入操作时, 根据实际的场景有不同的需求, 通常有两种情况:
+提交代码后根据情况触发流水线, 这是 gitlab-ci 的常用方式. 其实还有另外一种方式, 那就是**定时任务**.
 
-- 若存在则更新
+打开项目的 `CI/CD` 菜单, 除了 `Pipelines`, `Jobs` 之外, 还有一个 `Schedules`, 即定时任务的入口.
 
-- 若存在则放弃插入
+初次进入后一片空白, 只有一个简短的[帮助链接](https://docs.gitlab.com/ee/ci/pipelines/schedules.html)
+和一个 `New schedule` 按钮.
 
-我们以一条为例, 此时执行插入不再使用 `insert_one`, 而是使用 `update_one`.
+点击 `New schedule` 按钮新建一个任务, 可见有如下选项:
 
-我们可以看一下 [update_one](https://github.com/mongodb/mongo-python-driver/blob/807ab5ac9c153039b17bf5ffe4cd0d1d900c6631/pymongo/collection.py#L950) 方法的定义:
+- `Description`: 简单描述
 
-```python
-def update_one(self, filter, update, upsert=False,
-               bypass_document_validation=False,
-               collation=None, array_filters=None, hint=None,
-               session=None):
-    pass
-```
+- `Interval Pattern`: 间隔模式, 可选择默认的每天, 每周, 每月, 也可以根据 `Cron` 语法自定义.
+  五个占位符分别表示 `分时日月周`, 其中周日用 `0` 表示, 某些系统也支持 `7`.
 
-我们只需要了解 `filter`, `update` 和 `upsert` 三个参数即可.
+- `Cron Timezone`: 调度时区, 选择当前时区即可
 
-- `filter`: 匹配文档的查询
-- `update`: 执行的更改内容
-- `upsert`: 若为 `True` 则在无匹配的情况下执行插入操作
+- `Target Branch`: 目标分支, 执行时读取选定分支的最新提交, 使用其 `gitlab-ci.yml` 的配置启动任务.
 
-当我们使用 `update_one` 时, 对于 `update` 参数, 我们通常指定的是 `{"$set": {"k1": "v1"}}`.
+- `Variables`: 指定环境变量, 可以是 gitlab-ci 预置的环境变量, 也可以是自定义的环境变量.
 
-其实除了 `$set` 外, 还可以指定[其他的操作](https://docs.mongodb.com/manual/reference/operator/update-field/), 如 [`setOnInsert`](https://docs.mongodb.com/manual/reference/operator/update/setOnInsert/).
+- `Activated`: 是否设为活动
 
-`$setOnInsert` 定义为: 如果执行更新操作时指定 `upsert=True`, 且确实执行了插入操作, 然后就
-会执行 `$setOnInsert` 中指定的属性设置操作. 若未执行插入操作则什么也不做.
 
-综上, 假设我们有一个 collection 名为 test, 其中的数据属性为 `key` 和 `value`.
+填写相关信息后就可以 `Save pipeline schedule` 了.
 
-回到一开始的两个问题, 给出对应的操作:
 
-1. 若 `key` 存在则更新 `value`:
+回到 `Schedules` 页面可以看到新建的定时任务.
 
-```python
-db.test.update_one(
-    filter={'key': '1'},
-    update={'$set': {'value': 'some content'}}
-)
-```
+- `Next Run` 属性显示下次在什么时候运行,
 
-2. 若 `key` 存在则放弃更新 `value`:
+- `Last Pipeline` 属性显示最后一次调度是哪个 `Pipeline`. 
 
-```python
-db.test.update_one(
-    filter={'key': '1'},
-    update={'$setOnInsert': {'value': 'some content'}},
-    upsert=True
-)
-```
-
-即: 只有在找不到 `key` 为 '1' 的记录, 需要进行插入时才设定 `value` 的值为 'some content',
-否则不进行任何操作, 符合 `key` 存在则放弃更新 `value` 的策略.
-
+- 在 `Pipelines` 页面的 `Pipeline` 属性下, 带有 `Scheduled` 标签的即为调度生成的 Pipeline.
